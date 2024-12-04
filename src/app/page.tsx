@@ -2,22 +2,52 @@
 
 import { Container, Flex, Heading, Text, Box, Theme, Button } from '@radix-ui/themes';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const [fileNames, setFileNames] = useState<string[]>([]);
+  const router = useRouter();
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
-      const pngFiles = Array.from(files).filter(file => file.type === 'image/png');
-      setFileNames(pngFiles.map(file => file.name));
+      const filesArray = Array.from(files);
+      setSelectedFiles(filesArray);
+      
+      try {
+        const base64Images = await Promise.all(
+          filesArray.map(file => {
+            return new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                resolve(reader.result as string);
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+          })
+        );
+        
+        console.log('Görsel sayısı:', base64Images.length);
+        localStorage.setItem('formImages', JSON.stringify(base64Images));
+        console.log('Görseller localStorage\'a kaydedildi');
+      } catch (error) {
+        console.error('Görsel yükleme hatası:', error);
+      }
     }
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    window.location.href = 'http://localhost:3000/edit';
+  const handleEditClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    
+    const storedImages = localStorage.getItem('formImages');
+    if (storedImages) {
+      console.log('Edit sayfasına yönlendiriliyor...');
+      router.push('/edit');
+    } else {
+      alert('Lütfen önce görsel yükleyin');
+    }
   };
 
   const toggleTheme = () => {
@@ -98,7 +128,7 @@ export default function Home() {
                 PNG formatında optik formlarınızı yükleyin ve düzenlemeye başlayın
               </Text>
 
-              <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '400px' }}>
+              <form style={{ width: '100%', maxWidth: '400px' }}>
                 <Flex direction="column" gap="4" align="center">
                   <div className="w-full">
                     <label 
@@ -120,7 +150,7 @@ export default function Home() {
                       <input 
                         id="file-upload"
                         type="file"
-                        accept=".png"
+                        accept="image/*"
                         multiple
                         onChange={handleFileChange}
                         className="hidden"
@@ -129,7 +159,7 @@ export default function Home() {
                     </label>
                   </div>
                   
-                  {fileNames.length > 0 && (
+                  {selectedFiles.length > 0 && (
                     <Box className={`w-full p-4 rounded-xl ${
                       isDarkMode 
                         ? "bg-slate-700" 
@@ -139,37 +169,26 @@ export default function Home() {
                         <Text size="2" weight="bold" className={isDarkMode ? "text-white" : "text-blue-800"}>
                           Yüklenen Dosya:
                         </Text>
-                        {fileNames.map((name, index) => (
+                        {selectedFiles.map((file, index) => (
                           <Text key={index} size="2" className={`flex items-center gap-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
                             <svg className={`w-4 h-4 ${isDarkMode ? "text-slate-400" : "text-blue-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            {name}
+                            {file.name}
                           </Text>
                         ))}
                       </Flex>
                     </Box>
                   )}
 
-                  <button 
-                    type="submit"
-                    disabled={fileNames.length === 0}
-                    className={`
-                      w-full rounded-xl font-medium text-white
-                      transition-all duration-200 
-                      ${fileNames.length === 0 
-                        ? 'bg-gray-200 cursor-not-allowed text-gray-400' 
-                        : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl shadow-blue-500/20'
-                      }
-                    `}
-                    style={{
-                      padding: '24px',
-                      fontSize: '16px',
-                      fontWeight: '500'
-                    }}
+                  <Button 
+                    onClick={handleEditClick}
+                    size="3" 
+                    variant="solid"
+                    type="button"
                   >
                     Düzenlemeye Başla
-                  </button>
+                  </Button>
                 </Flex>
               </form>
             </Flex>

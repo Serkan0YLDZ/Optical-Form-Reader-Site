@@ -12,6 +12,7 @@
     "@radix-ui/react-primitive": "^2.0.0",
     "@radix-ui/themes": "^3.1.6",
     "next": "15.0.3",
+    "phosphor-react": "^1.4.1",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
     "react-zoom-pan-pinch": "^3.6.1"

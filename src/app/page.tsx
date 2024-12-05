@@ -61,7 +61,7 @@ export default function Home() {
           <button
             onClick={toggleTheme}
             className={`
-              p-3 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110
+              p-3 rounded-full transition-all  ease-in-out transform hover:scale-110
               ${isDarkMode 
                 ? "bg-slate-800 hover:bg-slate-700" 
                 : "bg-white hover:bg-gray-50 shadow-lg hover:shadow-xl"

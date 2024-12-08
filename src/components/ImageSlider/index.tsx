@@ -29,12 +29,17 @@ export default function ImageSlider(props: ImageSliderProps) {
       >
         {({ zoomIn, zoomOut, resetTransform }) => (
           <>
-            <ImageControls
-              onZoomIn={() => zoomIn(0.7)}
-              onZoomOut={() => zoomOut(0.7)}
-              onReset={resetTransform}
-              disabled={props.mode === 'selector'}
-            />
+            <div className="fixed bottom-6 left-6 z-50">
+              <div className="backdrop-blur-lg p-2 rounded-2xl shadow-xl border bg-slate-800/80 border-slate-700/50">
+                <ImageControls
+                  onZoomIn={() => zoomIn(0.7)}
+                  onZoomOut={() => zoomOut(0.7)}
+                  onReset={resetTransform}
+                  disabled={props.mode === 'selector'}
+                  isDarkMode={true}
+                />
+              </div>
+            </div>
 
             <div
               className="w-full h-full bg-slate-800 rounded-lg relative flex items-center justify-center"

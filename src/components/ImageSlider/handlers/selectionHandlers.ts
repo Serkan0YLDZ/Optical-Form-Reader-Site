@@ -17,8 +17,8 @@ export function createSelectionHandlers(
     if (mode !== 'selector') return;
 
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left + 25;
-    const y = e.clientY - rect.top;
+    const x = e.clientX;
+    const y = e.clientY;
     const mousePageX = e.pageX;
     const mousePageY = e.pageY;
 
@@ -55,7 +55,7 @@ export function createSelectionHandlers(
       }
     }
 
-    setSelection({
+    const newSelection: Selection = {
       startX: x,
       startY: y,
       endX: x,
@@ -66,16 +66,21 @@ export function createSelectionHandlers(
       displayY: mousePageY,
       displayWidth: 0,
       displayHeight: 0,
-    });
+      cropX: 0,
+      cropY: 0,
+      cropWidth: 0,
+      cropHeight: 0
+    };
+
+    setSelection(newSelection);
     setIsSelecting(true);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (mode !== 'selector') return;
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left + 25;
-    const y = e.clientY - rect.top;
+    const x = e.clientX;
+    const y = e.clientY;
     const mousePageX = e.pageX;
     const mousePageY = e.pageY;
 
@@ -92,16 +97,19 @@ export function createSelectionHandlers(
           height: Math.abs(y - selection.startY),
           displayWidth,
           displayHeight,
+          cropWidth: displayWidth,
+          cropHeight: displayHeight
         });
       });
     } else if (isDragging && selection) {
-      const width = Math.abs(selection.endX - selection.startX);
-      const height = Math.abs(selection.endY - selection.startY);
-      const newStartX = x - dragOffset.x;
-      const newStartY = y - dragOffset.y;
-
       requestAnimationFrame(() => {
+        const width = Math.abs(selection.endX - selection.startX);
+        const height = Math.abs(selection.endY - selection.startY);
+        const newStartX = x - dragOffset.x;
+        const newStartY = y - dragOffset.y;
+
         setSelection({
+          ...selection,
           startX: newStartX,
           startY: newStartY,
           endX: newStartX + width,
@@ -111,60 +119,68 @@ export function createSelectionHandlers(
           displayX: e.pageX - dragOffset.x,
           displayY: e.pageY - dragOffset.y,
           displayWidth: width,
-          displayHeight: height
+          displayHeight: height,
+          cropX: newStartX,
+          cropY: newStartY,
+          cropWidth: width,
+          cropHeight: height
         });
       });
     } else if (isResizing && selection) {
-      const originalLeft = Math.min(selection.startX, selection.endX);
-      const originalTop = Math.min(selection.startY, selection.endY);
-      const originalRight = Math.max(selection.startX, selection.endX);
-      const originalBottom = Math.max(selection.startY, selection.endY);
-
-      let newSelection = { ...selection };
-
-      switch (isResizing) {
-        case 'nw':
-          newSelection = {
-            ...selection,
-            startX: x,
-            startY: y,
-            endX: originalRight,
-            endY: originalBottom,
-          };
-          break;
-        case 'ne':
-          newSelection = {
-            ...selection,
-            startX: originalLeft,
-            startY: y,
-            endX: x,
-            endY: originalBottom,
-          };
-          break;
-        case 'sw':
-          newSelection = {
-            ...selection,
-            startX: x,
-            startY: originalTop,
-            endX: originalRight,
-            endY: y,
-          };
-          break;
-        case 'se':
-          newSelection = {
-            ...selection,
-            startX: originalLeft,
-            startY: originalTop,
-            endX: x,
-            endY: y,
-          };
-          break;
-      }
-
-      newSelection.width = Math.abs(newSelection.endX - newSelection.startX);
-      newSelection.height = Math.abs(newSelection.endY - newSelection.startY);
-
       requestAnimationFrame(() => {
+        const originalLeft = Math.min(selection.startX, selection.endX);
+        const originalTop = Math.min(selection.startY, selection.endY);
+        const originalRight = Math.max(selection.startX, selection.endX);
+        const originalBottom = Math.max(selection.startY, selection.endY);
+
+        let newSelection = { ...selection };
+
+        switch (isResizing) {
+          case 'nw':
+            newSelection = {
+              ...selection,
+              startX: x,
+              startY: y,
+              endX: originalRight,
+              endY: originalBottom,
+            };
+            break;
+          case 'ne':
+            newSelection = {
+              ...selection,
+              startX: originalLeft,
+              startY: y,
+              endX: x,
+              endY: originalBottom,
+            };
+            break;
+          case 'sw':
+            newSelection = {
+              ...selection,
+              startX: x,
+              startY: originalTop,
+              endX: originalRight,
+              endY: y,
+            };
+            break;
+          case 'se':
+            newSelection = {
+              ...selection,
+              startX: originalLeft,
+              startY: originalTop,
+              endX: x,
+              endY: y,
+            };
+            break;
+        }
+
+        newSelection.width = Math.abs(newSelection.endX - newSelection.startX);
+        newSelection.height = Math.abs(newSelection.endY - newSelection.startY);
+        newSelection.displayWidth = newSelection.width;
+        newSelection.displayHeight = newSelection.height;
+        newSelection.cropWidth = newSelection.width;
+        newSelection.cropHeight = newSelection.height;
+
         setSelection(newSelection);
       });
     }

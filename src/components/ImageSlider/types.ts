@@ -9,6 +9,10 @@ export interface Selection {
   displayY: number;
   displayWidth: number;
   displayHeight: number;
+  cropX: number;
+  cropY: number;
+  cropWidth: number;
+  cropHeight: number;
 }
 
 export interface Area {

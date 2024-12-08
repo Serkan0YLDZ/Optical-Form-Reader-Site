@@ -21,7 +21,15 @@ interface RenderProps {
   };
 }
 
-export default function ImageSlider({ images, currentIndex, onImageChange, mode, onSelectionChange, savedAreas }: ImageSliderProps) {
+export default function ImageSlider({ 
+  images, 
+  currentIndex, 
+  onImageChange, 
+  mode, 
+  onSelectionChange, 
+  savedAreas,
+  isDarkMode
+}: ImageSliderProps & { isDarkMode: boolean }) {
   const {
     selection,
     setSelection,
@@ -53,14 +61,6 @@ export default function ImageSlider({ images, currentIndex, onImageChange, mode,
     setDragOffset
   );
 
-  const handleReset = (resetTransform: () => void) => {
-    resetTransform();
-    return {
-      position: { x: 0, y: 0 },
-      scale: 1
-    };
-  };
-
   return (
     <div className="flex-1 flex flex-col h-screen relative">
       <TransformWrapper
@@ -76,12 +76,17 @@ export default function ImageSlider({ images, currentIndex, onImageChange, mode,
         {({ zoomIn, zoomOut, resetTransform, instance }: RenderProps) => (
           <>
             <div className="fixed bottom-6 left-6 z-50">
-              <div className="bg-slate-800/80 backdrop-blur-lg p-2 rounded-2xl shadow-xl border border-slate-700/50">
+              <div className={`backdrop-blur-lg p-2 rounded-2xl shadow-xl border ${
+                isDarkMode 
+                  ? 'bg-slate-800/80 border-slate-700/50' 
+                  : 'bg-white/80 border-slate-200/50'
+              }`}>
                 <ImageControls
                   onZoomIn={() => zoomIn(0.7)}
                   onZoomOut={() => zoomOut(0.7)}
-                  onReset={() => handleReset(resetTransform)}
+                  onReset={() => resetTransform()}
                   disabled={mode === 'selector'}
+                  isDarkMode={isDarkMode}
                 />
               </div>
             </div>
@@ -103,6 +108,7 @@ export default function ImageSlider({ images, currentIndex, onImageChange, mode,
                 handleMouseMove({ ...e, clientX: x, clientY: y });
               }}
               onMouseUp={handleMouseUp}
+              isDarkMode={isDarkMode}
             />
           </>
         )}

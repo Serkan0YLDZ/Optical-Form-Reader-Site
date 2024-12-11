@@ -1,4 +1,4 @@
-import { Selection } from '../types';
+import { Selection } from '@/types';
 
 export function createSelectionHandlers(
   mode: string,
@@ -86,19 +86,22 @@ export function createSelectionHandlers(
 
     if (isSelecting && selection) {
       requestAnimationFrame(() => {
-        const displayWidth = Math.abs(mousePageX - selection.displayX);
-        const displayHeight = Math.abs(mousePageY - selection.displayY);
+        const width = x - selection.startX;
+        const height = y - selection.startY;
         
+        const displayWidth = mousePageX - selection.displayX;
+        const displayHeight = mousePageY - selection.displayY;
+
         setSelection({
           ...selection,
           endX: x,
           endY: y,
-          width: Math.abs(x - selection.startX),
-          height: Math.abs(y - selection.startY),
-          displayWidth,
-          displayHeight,
-          cropWidth: displayWidth,
-          cropHeight: displayHeight
+          width: Math.abs(width),
+          height: Math.abs(height),
+          displayWidth: displayWidth,
+          displayHeight: displayHeight,
+          cropWidth: Math.abs(displayWidth),
+          cropHeight: Math.abs(displayHeight)
         });
       });
     } else if (isDragging && selection) {
@@ -120,7 +123,7 @@ export function createSelectionHandlers(
           displayY: e.pageY - dragOffset.y,
           displayWidth: width,
           displayHeight: height,
-          cropX: newStartX,
+          cropX: newStartX + 75,
           cropY: newStartY,
           cropWidth: width,
           cropHeight: height

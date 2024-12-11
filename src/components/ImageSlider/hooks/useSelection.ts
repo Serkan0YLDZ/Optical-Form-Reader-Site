@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Selection } from '../types';
+import { Selection } from '@/types';
 
 export function useSelection(mode: string, onSelectionChange?: (selection: Selection | null) => void) {
   const [selection, setSelection] = useState<Selection | null>(null);

@@ -1,4 +1,4 @@
-import { Selection } from './types';
+import { Selection } from '@/types';
 
 export class SelectionManager {
   public isSelecting: boolean = false;
@@ -53,7 +53,22 @@ export class SelectionManager {
   }
 
   private startNewSelection(x: number, y: number): void {
-    this.selection = { startX: x, startY: y, endX: x, endY: y, width: 0, height: 0, displayX: x, displayY: y, displayWidth: 0, displayHeight: 0 };
+    this.selection = { 
+        startX: x, 
+        startY: y, 
+        endX: x, 
+        endY: y, 
+        width: 0, 
+        height: 0, 
+        displayX: x, 
+        displayY: y, 
+        displayWidth: 0, 
+        displayHeight: 0,
+        cropX: x,
+        cropY: y,
+        cropWidth: 0,
+        cropHeight: 0
+    };
     this.isSelecting = true;
     this.onSelectionChange(this.selection);
   }

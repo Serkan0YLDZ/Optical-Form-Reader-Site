@@ -1,4 +1,4 @@
-import { Area } from '../types';
+import { Area } from '@/types';
 import { AREA_COLORS } from '../constants';
 
 interface AreaOverlayProps {

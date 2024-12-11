@@ -1,12 +1,10 @@
-import { useState, useEffect } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { ImageControls } from './components/ImageControls';
-import { AreaOverlay } from './components/AreaOverlay';
 import { SelectionOverlay } from './components/SelectionOverlay';
-import { ImageSliderProps, Selection } from './types';
 import { useSelection } from './hooks/useSelection';
 import { createSelectionHandlers } from './handlers/selectionHandlers';
 import { ImageContainer } from './components/ImageContainer';
+import { ImageSliderProps } from '@/types';
 
 interface RenderProps {
   zoomIn: (step?: number) => void;

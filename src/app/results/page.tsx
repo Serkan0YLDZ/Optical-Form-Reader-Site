@@ -1,32 +1,15 @@
 "use client"
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useRouter } from 'next/navigation';
-
-interface DetailedResult {
-  question: number;
-  marked_answer: string | null;
-  correct_answer: string;
-  status: string;
-}
-
-interface AnalysisResult {
-  areaName: string;
-  summary: {
-    total_questions: number;
-    correct: number;
-    incorrect: number;
-    empty: number;
-    invalid: number;
-    accuracy: number;
-  };
-  detailed_results: DetailedResult[];
-  processed_image_path: string;
-}
+import { Sun, Moon } from "phosphor-react";
+import { ThemeContext } from '../theme-provider';
+import { DetailedResult, AnalysisResult } from '@/types';
 
 export default function ResultsPage() {
   const [results, setResults] = useState<AnalysisResult[]>([]);
   const router = useRouter();
+  const { isDarkMode, toggleTheme } = useContext(ThemeContext);
 
   useEffect(() => {
     const storedResults = localStorage.getItem('analysisResults');
@@ -51,16 +34,44 @@ export default function ResultsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-8">
+    <div className={`min-h-screen ${
+      isDarkMode 
+        ? 'bg-slate-900 text-white' 
+        : 'bg-gradient-to-br from-blue-50 to-slate-50 text-slate-900'
+    } p-8 transition-colors duration-300`}>
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Analiz Sonuçları</h1>
-          <button
-            onClick={() => router.push('/edit')}
-            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
-          >
-            Düzenleme Sayfasına Dön
-          </button>
+          <div className="flex items-center gap-4">
+            {/* Düzenleme Sayfasına Dön Butonu */}
+            <button
+              onClick={() => router.push('/edit')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                isDarkMode 
+                  ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                  : 'bg-blue-500 hover:bg-blue-600 text-white shadow-md'
+              }`}
+            >
+              Düzenleme Sayfasına Dön
+            </button>
+            {/* Dark Mode Butonu */}
+            <button
+              onClick={toggleTheme}
+              className={`p-3 rounded-full transition-colors ${
+                isDarkMode 
+                  ? 'bg-slate-800 hover:bg-slate-700 text-yellow-500' 
+                  : 'bg-white hover:bg-slate-100 text-slate-700 shadow-md'
+              }`}
+            >
+              {isDarkMode ? (
+                <Sun size={24} weight="bold" />
+              ) : (
+                <Moon size={24} weight="bold" />
+              )}
+            </button>
+
+            
+          </div>
         </div>
 
         {results.length === 0 ? (
@@ -76,7 +87,11 @@ export default function ResultsPage() {
         ) : (
           <div className="grid gap-8">
             {results.map((result, index) => (
-              <div key={index} className="bg-slate-800 rounded-xl p-6 shadow-lg">
+              <div key={index} className={`rounded-xl p-6 shadow-lg ${
+                isDarkMode 
+                  ? 'bg-slate-800' 
+                  : 'bg-white border border-slate-200'
+              }`}>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-semibold text-blue-400">
                     {result.areaName}
@@ -88,9 +103,19 @@ export default function ResultsPage() {
 
                 {/* Özet Kartları */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-                  <div className="bg-slate-700 p-4 rounded-lg text-center">
-                    <div className="text-2xl font-bold">{result.summary.total_questions}</div>
-                    <div className="text-sm text-slate-300">Toplam Soru</div>
+                  <div className={`p-4 rounded-lg text-center ${
+                    isDarkMode ? 'bg-slate-700' : 'bg-slate-50'
+                  }`}>
+                    <div className={`text-2xl font-bold ${
+                      isDarkMode ? 'text-white' : 'text-slate-900'
+                    }`}>
+                      {result.summary.total_questions}
+                    </div>
+                    <div className={`text-sm ${
+                      isDarkMode ? 'text-slate-300' : 'text-slate-900'
+                    }`}>
+                      Toplam Soru
+                    </div>
                   </div>
                   <div className="bg-green-500/20 p-4 rounded-lg text-center">
                     <div className="text-2xl font-bold text-green-400">{result.summary.correct}</div>
@@ -124,12 +149,20 @@ export default function ResultsPage() {
 
                 {/* Detaylı Sonuçlar */}
                 <div>
-                  <h3 className="text-xl font-semibold mb-4">Detaylı Sonuçlar</h3>
+                  <h3 className={`text-xl font-semibold mb-4 ${
+                    isDarkMode ? 'text-white' : 'text-slate-900'
+                  }`}>
+                    Detaylı Sonuçlar
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {result.detailed_results.map((detail, i) => (
                       <div 
                         key={i} 
-                        className={`p-4 rounded-lg border border-slate-700 ${
+                        className={`p-4 rounded-lg border ${
+                          isDarkMode 
+                            ? 'border-slate-700' 
+                            : 'border-slate-200'
+                        } ${
                           detail.status === 'correct' ? 'bg-green-500/10' :
                           detail.status === 'incorrect' ? 'bg-red-500/10' :
                           detail.status === 'empty' ? 'bg-yellow-500/10' :
@@ -137,7 +170,11 @@ export default function ResultsPage() {
                         }`}
                       >
                         <div className="flex justify-between items-center mb-2">
-                          <span className="font-medium">Soru {detail.question}</span>
+                          <span className={`font-medium ${
+                            isDarkMode ? 'text-white' : 'text-slate-900'
+                          }`}>
+                            Soru {detail.question}
+                          </span>
                           <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(detail.status)} bg-opacity-20`}>
                             {detail.status.toUpperCase()}
                           </span>
@@ -145,13 +182,25 @@ export default function ResultsPage() {
                         <div className="text-sm space-y-1">
                           {detail.marked_answer && (
                             <div className="flex justify-between">
-                              <span className="text-slate-300">İşaretlenen:</span>
-                              <span className="font-medium">{detail.marked_answer.toUpperCase()}</span>
+                              <span className={isDarkMode ? 'text-slate-300' : 'text-slate-900'}>
+                                İşaretlenen:
+                              </span>
+                              <span className={`font-medium ${
+                                isDarkMode ? 'text-white' : 'text-slate-900'
+                              }`}>
+                                {detail.marked_answer.toUpperCase()}
+                              </span>
                             </div>
                           )}
                           <div className="flex justify-between">
-                            <span className="text-slate-300">Doğru Cevap:</span>
-                            <span className="font-medium">{detail.correct_answer.toUpperCase()}</span>
+                            <span className={isDarkMode ? 'text-slate-300' : 'text-slate-900'}>
+                              Doğru Cevap:
+                            </span>
+                            <span className={`font-medium ${
+                              isDarkMode ? 'text-white' : 'text-slate-900'
+                            }`}>
+                              {detail.correct_answer.toUpperCase()}
+                            </span>
                           </div>
                         </div>
                       </div>

@@ -4,10 +4,7 @@ import path from 'path';
 
 export async function POST(request: Request) {
   try {
-    const { imagePath, areaName } = await request.json();
-    
-    // Varsayılan cevap anahtarını oluştur (hepsi 'a')
-    const answerKey = Array(20).fill('a');
+    const { imagePath, areaName, areaId, answerKey } = await request.json();
     
     return new Promise((resolve) => {
       const pythonProcess = spawn('python3', [
@@ -17,23 +14,19 @@ export async function POST(request: Request) {
       ]);
 
       let resultData = '';
-      let errorData = '';
 
       pythonProcess.stdout.on('data', (data) => {
-        console.log('Python çıktısı:', data.toString());
         resultData += data.toString();
       });
 
       pythonProcess.stderr.on('data', (data) => {
-        console.error('Python hatası:', data.toString());
-        errorData += data.toString();
+        console.error(`Python hatası: ${data}`);
       });
 
       pythonProcess.on('close', (code) => {
         if (code !== 0) {
           resolve(NextResponse.json({ 
-            error: 'Python işlemi başarısız oldu', 
-            details: errorData 
+            error: 'Python işlemi başarısız oldu' 
           }, { status: 500 }));
           return;
         }
@@ -55,4 +48,4 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
-} 
+}

@@ -7,8 +7,8 @@ import sys
 
 class FormProcessor:
     def __init__(self):
-        self.y_threshold = 10
-        self.filling_threshold = 0.6
+        self.y_threshold = 15
+        self.filling_threshold = 0.3
 
     def process_image(self, image_path: str, answer_key: List[str]) -> None:
         try:
@@ -25,41 +25,38 @@ class FormProcessor:
             # Görüntüyü işle
             processed_image, circles = self.detect_circles_and_marks(image, answer_key)
             if not circles:
-                raise Exception("Hiç daire tespit edilemedi")
-            
-            # Grupla ve analiz et
+                raise Exception("Hiç daire bulunamadı")
+
+            # Grupları analiz et
             groups = self.group_circles(circles)
-            results, answer_status = self.analyze_groups(groups, answer_key)
-            
-            # Debug görüntüsünü kaydet
-            debug_image_path = image_path.replace('.png', '_processed.png')
-            cv2.imwrite(debug_image_path, processed_image)
+            results, detailed_results = self.analyze_groups(groups, answer_key)
             
             # Sonuçları hazırla
-            final_results = {
-                'summary': {
-                    'total_questions': len(answer_key),
-                    'correct': results['correct'],
-                    'incorrect': results['incorrect'],
-                    'empty': results['empty'],
-                    'invalid': results['invalid'],
-                    'accuracy': results['correct'] / len(answer_key) if len(answer_key) > 0 else 0
-                },
-                'detailed_results': [
-                    {
-                        'question': status[0],
-                        'marked_answer': status[2],
-                        'correct_answer': status[3],
-                        'status': status[1].lower()
-                    }
-                    for status in answer_status
-                ],
-                'processed_image_path': debug_image_path,
-                'status': 'success'
+            total_questions = len(answer_key)
+            accuracy = (results['correct'] / total_questions) * 100 if total_questions > 0 else 0
+            
+            # Detaylı sonuçları formatla
+            formatted_results = []
+            for question_num, status, marked, correct in detailed_results:
+                formatted_results.append({
+                    'question': question_num,
+                    'marked_answer': marked,
+                    'correct_answer': correct,
+                    'status': status
+                })
+            
+            # Sonuçları JSON olarak döndür
+            output = {
+                'total_questions': total_questions,
+                'correct': results['correct'],
+                'incorrect': results['incorrect'],
+                'empty': results['empty'],
+                'invalid': results['invalid'],
+                'accuracy': accuracy,
+                'detailed_results': formatted_results
             }
             
-            # Sonuçları JSON olarak yazdır
-            sys.stdout.write(json.dumps(final_results))
+            sys.stdout.write(json.dumps(output))
             sys.stdout.flush()
             
         except Exception as e:
@@ -67,6 +64,7 @@ class FormProcessor:
                 'error': str(e),
                 'status': 'failed'
             }
+            sys.stderr.write(f"Hata oluştu: {str(e)}\n")
             sys.stdout.write(json.dumps(error_result))
             sys.stdout.flush()
 
@@ -76,8 +74,13 @@ class FormProcessor:
 
         # Görüntüyü iyileştir
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        
+        # Kontrast artırma
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         enhanced = clahe.apply(blurred)
+        
+        # Threshold uygula
+        _, binary = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
         circles = cv2.HoughCircles(
             enhanced,
@@ -94,20 +97,42 @@ class FormProcessor:
 
         if circles is not None:
             circles = np.uint16(np.around(circles))
-            detected_circles = [
-                {
-                    'x': int(c[0]),
-                    'y': int(c[1]),
-                    'radius': int(c[2]),
-                    'is_filled': cv2.mean(gray, mask=self.create_circle_mask(gray, int(c[0]), int(c[1]), int(c[2])-2))[0] < 128
-                }
-                for c in circles[0, :]
-            ]
+            for c in circles[0, :]:
+                x, y, r = int(c[0]), int(c[1]), int(c[2])
+                
+                # Daire içindeki bölgeyi analiz et
+                mask = self.create_circle_mask(gray, x, y, r-2)
+                roi = cv2.bitwise_and(binary, binary, mask=mask)
+                
+                # Doldurulma oranını hesapla
+                total_pixels = cv2.countNonZero(mask)
+                filled_pixels = cv2.countNonZero(roi)
+                fill_ratio = filled_pixels / total_pixels if total_pixels > 0 else 0
+                
+                # İşaretli olup olmadığını kontrol et
+                is_filled = fill_ratio > 0.3  # Eşik değeri
+                
+                # Debug için görselleştirme
+                color = (0, 255, 0) if is_filled else (0, 0, 255)
+                cv2.circle(output, (x, y), r, color, 2)
+                cv2.circle(output, (x, y), 2, color, 3)
+                
+                # Debug bilgisi
+                sys.stderr.write(f"Daire: x={x}, y={y}, fill_ratio={fill_ratio:.2f}, is_filled={is_filled}\n")
+                
+                detected_circles.append({
+                    'x': x,
+                    'y': y,
+                    'radius': r,
+                    'is_filled': is_filled,
+                    'fill_ratio': fill_ratio
+                })
 
         return output, detected_circles
 
     def create_circle_mask(self, image: np.ndarray, x: int, y: int, r: int) -> np.ndarray:
-        mask = np.zeros(image.shape, dtype=np.uint8)
+        h, w = image.shape[:2]
+        mask = np.zeros((h, w), dtype=np.uint8)
         cv2.circle(mask, (x, y), r, 255, -1)
         return mask
 
@@ -142,18 +167,33 @@ class FormProcessor:
         }
         answer_status = []
 
-        for i, group in enumerate(groups):
-            if i >= len(answer_key):
-                break
+        # Debug bilgisi
+        sys.stderr.write(f"\nToplam beklenen soru sayısı: {len(answer_key)}\n")
+        sys.stderr.write(f"Tespit edilen grup sayısı: {len(groups)}\n")
 
+        # Tüm soruları döngüye al (cevap anahtarı uzunluğu kadar)
+        for i in range(len(answer_key)):
+            # Eğer bu soru için grup bulunamadıysa
+            if i >= len(groups):
+                results['invalid'] += 1
+                answer_status.append((i + 1, 'Invalid', None, answer_key[i]))
+                sys.stderr.write(f"Soru {i + 1}: Grup bulunamadı - Geçersiz olarak işaretlendi\n")
+                continue
+
+            group = groups[i]
             marked_circles = sum(1 for circle in group if circle['is_filled'])
+
+            # Debug bilgisi
+            sys.stderr.write(f"Soru {i + 1}: İşaretli daire sayısı = {marked_circles}\n")
 
             if marked_circles == 0:
                 results['empty'] += 1
                 answer_status.append((i + 1, 'Empty', None, answer_key[i]))
+                sys.stderr.write(f"Soru {i + 1}: Boş\n")
             elif marked_circles > 1:
                 results['invalid'] += 1
                 answer_status.append((i + 1, 'Invalid', None, answer_key[i]))
+                sys.stderr.write(f"Soru {i + 1}: Birden fazla işaretleme - Geçersiz\n")
             else:
                 marked_index = next(i for i, circle in enumerate(group) if circle['is_filled'])
                 marked_answer = string.ascii_lowercase[marked_index]
@@ -162,11 +202,13 @@ class FormProcessor:
                 if marked_answer == correct_answer:
                     results['correct'] += 1
                     answer_status.append((i + 1, 'Correct', marked_answer, correct_answer))
+                    sys.stderr.write(f"Soru {i + 1}: Doğru (İşaretlenen: {marked_answer})\n")
                 else:
                     results['incorrect'] += 1
                     answer_status.append((i + 1, 'Incorrect', marked_answer, correct_answer))
+                    sys.stderr.write(f"Soru {i + 1}: Yanlış (İşaretlenen: {marked_answer}, Doğru: {correct_answer})\n")
 
-        return results, answer_status 
+        return results, answer_status
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

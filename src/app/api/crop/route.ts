@@ -8,6 +8,12 @@ export async function POST(request: Request) {
   try {
     const { cropX, cropY, cropWidth, cropHeight, originalImageName, areaName } = await request.json();
     
+    // Koordinatları doğrula ve düzelt
+    const validCropX = Math.max(0, Math.round(cropX));
+    const validCropY = Math.max(0, Math.round(cropY));
+    const validCropWidth = Math.max(1, Math.round(cropWidth));
+    const validCropHeight = Math.max(1, Math.round(cropHeight));
+    
     // Orijinal görselin yolunu al
     const publicPath = path.join(process.cwd(), 'public');
     const areasPath = path.join(publicPath, 'areas');
@@ -21,10 +27,10 @@ export async function POST(request: Request) {
     // Görseli kırp
     const croppedImageBuffer = await sharp(originalImagePath)
       .extract({
-        left: Math.round(cropX),
-        top: Math.round(cropY),
-        width: Math.round(cropWidth),
-        height: Math.round(cropHeight)
+        left: validCropX,
+        top: validCropY,
+        width: validCropWidth,
+        height: validCropHeight
       })
       .toBuffer();
 

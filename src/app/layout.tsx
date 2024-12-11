@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import ThemeProvider from './theme-provider';
 import localFont from "next/font/local";
 import "./globals.css";
 import '@radix-ui/themes/styles.css';
-import { Theme } from '@radix-ui/themes';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
   weight: "100 900",
 });
+
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
@@ -28,9 +29,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Theme appearance="dark" accentColor="blue" grayColor="slate">
+        <ThemeProvider>
           {children}
-        </Theme>
+        </ThemeProvider>
       </body>
     </html>
   );

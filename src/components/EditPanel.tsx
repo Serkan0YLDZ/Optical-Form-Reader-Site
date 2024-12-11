@@ -2,22 +2,10 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { Box, Container, Flex, Text, Button, Separator, ScrollArea } from '@radix-ui/themes';
 import * as Form from "@radix-ui/react-form";
-import { SelectionPlus, ChartBar } from "phosphor-react";
-
-interface Selection {
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-  width: number;
-  height: number;
-}
-
-interface Area {
-  id: string;
-  name: string;
-  selection: Selection;
-}
+import { SelectionPlus, ChartBar, Sun, Moon, ListChecks, Checks, Pencil, Trash } from "phosphor-react";
+import { CaretDown } from 'phosphor-react';
+import { Selection, Area, Question } from '@/types';
+import * as Popover from '@radix-ui/react-popover';
 
 interface EditPanelProps {
   results: any[];
@@ -32,6 +20,14 @@ interface EditPanelProps {
   areaName: string;
   setAreaName: (name: string) => void;
   onCropAndAnalyze: () => Promise<void>;
+  onUpdateAreaName: (id: string, newName: string) => void;
+  onShowAnswerKey: (areaId: string, areaName: string) => void;
+  onShowAllAnswerKeys: () => void;
+  answerKeys: { [areaId: string]: Question[] };
+  isButtonDisabled: boolean;
+  setIsButtonDisabled: (disabled: boolean) => void;
+  onQuestionCountChange: (areaId: string, count: number) => void;
+  setShowAllAnswerKeys: (show: boolean) => void;
 }
 
 export default function EditPanel({ 
@@ -47,8 +43,17 @@ export default function EditPanel({
   areaName,
   setAreaName,
   onCropAndAnalyze,
+  onUpdateAreaName,
+  onShowAnswerKey,
+  onShowAllAnswerKeys,
+  answerKeys,
+  isButtonDisabled,
+  setIsButtonDisabled,
+  onQuestionCountChange,
+  setShowAllAnswerKeys,
 }: EditPanelProps) {
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [editingAreaId, setEditingAreaId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
 
   useEffect(() => {
     if (hasSelection) {
@@ -57,6 +62,28 @@ export default function EditPanel({
       setIsButtonDisabled(false);
     }
   }, [hasSelection, savedAreas.length]);
+
+  useEffect(() => {
+    if (savedAreas.length === 0) {
+      setIsButtonDisabled(true);
+      return;
+    }
+
+    const allAreasHaveCompleteAnswers = savedAreas.every(area => {
+      const areaAnswers = answerKeys[area.id];
+      
+      if (!areaAnswers || areaAnswers.length === 0) {
+        return false;
+      }
+
+      return areaAnswers.every(question => 
+        question.answer !== null && 
+        question.answer !== undefined
+      );
+    });
+
+    setIsButtonDisabled(!allAreasHaveCompleteAnswers);
+  }, [savedAreas, answerKeys]);
 
   const handleSaveArea = () => {
     if (currentSelection && areaName.trim()) {
@@ -76,6 +103,36 @@ export default function EditPanel({
     }
   };
 
+  const handleAreaNameClick = (area: Area) => {
+    setEditingAreaId(area.id);
+    setEditingName(area.name);
+  };
+
+  const handleNameUpdate = (id: string) => {
+    if (editingName.trim()) {
+      onUpdateAreaName(id, editingName.trim());
+      setEditingAreaId(null);
+    }
+  };
+
+  const handleSaveAndFinish = () => {
+    const allQuestionsAnswered = savedAreas.every(area => {
+      const areaAnswers = answerKeys[area.id];
+      if (!areaAnswers || areaAnswers.length === 0) return false;
+      
+      return areaAnswers.every(question => 
+        question.answer !== null && 
+        question.answer !== undefined
+      );
+    });
+
+    localStorage.setItem('answerKeys', JSON.stringify(answerKeys));
+    
+    setIsButtonDisabled(!allQuestionsAnswered);
+    
+    setShowAllAnswerKeys(false);
+  };
+
   return (
     <Flex direction="column" height="100vh" className="relative">
       {/* Üst kısım - Scrollable içerik */}
@@ -91,33 +148,28 @@ export default function EditPanel({
               >
                 Düzenleme Bölümü
               </Text>
-              <Button 
-                variant="soft" 
-                onClick={onThemeToggle}
-                className={`
-                  w-10 h-10 p-0 flex items-center justify-center
-                  ${isDarkMode 
-                    ? 'bg-slate-700 hover:bg-slate-600' 
-                    : 'bg-slate-100 hover:bg-slate-200'
-                  }
-                `}
-              >
-                {isDarkMode ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-                  </svg>
-                )}
-              </Button>
+              <Box className="rounded-full overflow-hidden">
+                <button
+                  onClick={onThemeToggle}
+                  className={`p-3 rounded-full transition-colors ${
+                    isDarkMode 
+                      ? 'bg-slate-800 hover:bg-slate-700 text-yellow-500' 
+                      : 'bg-white hover:bg-slate-100 text-slate-700 shadow-md'
+                  }`}
+                >
+                  {isDarkMode ? (
+                    <Sun size={24} weight="bold" />
+                  ) : (
+                    <Moon size={24} weight="bold" />
+                  )}
+                </button>
+              </Box>
             </Flex>
 
             {/* Düzenleme Bölümü */}
             <Box className="pb-4">
               <Flex direction="column" gap="2">
-                {savedAreas.map((area) => (
+                {savedAreas.map((area, index) => (
                   <Flex 
                     key={area.id} 
                     justify="between" 
@@ -131,34 +183,151 @@ export default function EditPanel({
                       }
                     `}
                   >
-                    <Text className={isDarkMode ? 'text-white' : 'text-slate-700'}>
-                      {area.name}
-                    </Text>
-                    <Button 
-                      variant="ghost" 
-                      color="red" 
-                      onClick={() => onDeleteArea(area.id)}
-                      className={isDarkMode ? 'hover:bg-slate-600' : 'hover:bg-red-50'}
-                    >
-                      <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        className="h-5 w-5" 
-                        fill="none" 
-                        viewBox="0 0 24 24" 
-                        stroke="currentColor"
+                    {editingAreaId === area.id ? (
+                      <input
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        onBlur={() => handleNameUpdate(area.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleNameUpdate(area.id);
+                          } else if (e.key === 'Escape') {
+                            setEditingAreaId(null);
+                          }
+                        }}
+                        autoFocus
+                        className={`
+                          px-2 py-1 rounded-md outline-none w-full
+                          ${isDarkMode 
+                            ? 'bg-slate-600 text-white border border-slate-500' 
+                            : 'bg-white text-slate-700 border border-slate-300'
+                          }
+                        `}
+                      />
+                    ) : (
+                      <Text 
+                        className={`
+                          cursor-pointer hover:opacity-70 transition-opacity
+                          ${isDarkMode ? 'text-white' : 'text-slate-700'}
+                        `}
+                        onClick={() => handleAreaNameClick(area)}
                       >
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth={2} 
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
-                        />
-                      </svg>
-                    </Button>
+                        {area.name}
+                      </Text>
+                    )}
+                    
+                    <Flex gap="2" align="center">
+                      <Popover.Root>
+                        <Popover.Trigger asChild>
+                          <button
+                            className={`
+                              p-2 rounded-lg transition-colors
+                              ${isDarkMode 
+                                ? 'hover:bg-slate-700 text-slate-400' 
+                                : 'hover:bg-slate-100 text-slate-600'
+                              }
+                            `}
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        </Popover.Trigger>
+                        
+                        <Popover.Portal>
+                          <Popover.Content
+                            className={`
+                              rounded-lg p-4 shadow-xl
+                              ${isDarkMode 
+                                ? 'bg-slate-800 border border-slate-700' 
+                                : 'bg-white border border-slate-200'
+                              }
+                            `}
+                            sideOffset={5}
+                          >
+                            <div className="space-y-3">
+                              <p className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                                Soru Sayısı
+                              </p>
+                              <input
+                                type="number"
+                                min="1"
+                                max="100"
+                                defaultValue={answerKeys[area.id]?.length || 20}
+                                onChange={(e) => {
+                                  const count = parseInt(e.target.value);
+                                  if (count > 0 && count <= 100) {
+                                    onQuestionCountChange(area.id, count);
+                                  }
+                                }}
+                                className={`
+                                  w-full px-3 py-2 rounded-lg
+                                  ${isDarkMode 
+                                    ? 'bg-slate-900 border-slate-700 text-white' 
+                                    : 'bg-white border-slate-200 text-slate-900'
+                                  }
+                                  border focus:outline-none focus:ring-2 focus:ring-blue-500
+                                `}
+                              />
+                            </div>
+                            <Popover.Arrow 
+                              className={isDarkMode ? 'fill-slate-800' : 'fill-white'} 
+                            />
+                          </Popover.Content>
+                        </Popover.Portal>
+                      </Popover.Root>
+
+                      <Button 
+                        variant="ghost" 
+                        color="red" 
+                        onClick={() => onDeleteArea(area.id)}
+                        className={isDarkMode ? 'hover:bg-slate-600' : 'hover:bg-red-50'}
+                      >
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          className="h-5 w-5" 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+                          />
+                        </svg>
+                      </Button>
+                    </Flex>
                   </Flex>
                 ))}
               </Flex>
             </Box>
+
+            {/* Kayıtlı alanlar listesi */}
+            {savedAreas.length > 0 && (
+              <div className="space-y-4">
+                {/* Cevap Anahtarı Butonu */}
+                <button
+                  onClick={onShowAllAnswerKeys}
+                  className={`
+                    w-full flex items-center justify-between px-4 py-3 rounded-lg
+                    ${isDarkMode 
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                    }
+                    transition-colors duration-200
+                  `}
+                >
+                  <Flex align="center" gap="2">
+                    <Checks size={20} weight="bold" />
+                    <span className="font-medium">Cevap Anahtarı</span>
+                  </Flex>
+                  <CaretDown size={20} weight="bold" />
+                </button>
+
+                {/* ... diğer alan listesi kodları ... */}
+              </div>
+            )}
           </Flex>
         </Box>
       </Box>
@@ -176,7 +345,15 @@ export default function EditPanel({
           }
         `}
       >
-        <Form.Root className="p-4">
+        <Form.Root 
+          className="p-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (areaName.trim() && hasSelection && !isButtonDisabled) {
+              handleSaveArea();
+            }
+          }}
+        >
           <Flex direction="column" gap="2">
             <Form.Field name="areaName">
               <Form.Control asChild>
@@ -220,13 +397,17 @@ export default function EditPanel({
               <Button
                 type="button"
                 onClick={() => onCropAndAnalyze()}
-                disabled={savedAreas.length === 0}
+                disabled={isButtonDisabled || savedAreas.length === 0}
                 color="green"
                 className={`
-                  flex items-center justify-center px-4 py-2 rounded-lg
-                  ${isDarkMode 
-                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white disabled:bg-slate-700 disabled:text-slate-500' 
-                    : 'bg-emerald-500 hover:bg-emerald-600 text-white disabled:bg-slate-100 disabled:text-slate-400'
+                  w-full px-4 py-3 rounded-lg font-medium transition-colors duration-200
+                  ${isDarkMode
+                    ? isButtonDisabled
+                      ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    : isButtonDisabled
+                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                      : 'bg-emerald-500 hover:bg-emerald-600 text-white'
                   }
                 `}
               >
@@ -234,6 +415,10 @@ export default function EditPanel({
                 Değerlendir 
               </Button>
             </Flex>
+
+            <Separator size="4" />
+
+            
           </Flex>
         </Form.Root>
       </Box>

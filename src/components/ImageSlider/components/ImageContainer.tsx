@@ -1,5 +1,5 @@
 import { TransformComponent } from "react-zoom-pan-pinch";
-import { Area } from "../types";
+import { Area } from "@/types";
 import { AreaOverlay } from "./AreaOverlay";
 
 interface ImageContainerProps {

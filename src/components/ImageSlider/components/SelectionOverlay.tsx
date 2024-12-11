@@ -1,4 +1,4 @@
-import { Selection } from '../types';
+import { Selection } from '@/types';
 
 interface SelectionOverlayProps {
   selection: Selection;

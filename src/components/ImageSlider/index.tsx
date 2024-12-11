@@ -4,7 +4,7 @@ import { SelectionManager } from './SelectionManager';
 import { ImageControls } from './components/ImageControls';
 import { AreaOverlay } from './components/AreaOverlay';
 import { SelectionOverlay } from './components/SelectionOverlay';
-import { ImageSliderProps, Selection } from './types';
+import { ImageSliderProps, Selection } from '@/types';
 import { AREA_COLORS } from './constants';
 
 export default function ImageSlider(props: ImageSliderProps) {

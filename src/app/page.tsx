@@ -2,19 +2,25 @@
 
 import { Container, Flex, Heading, Text, Box, Button } from '@radix-ui/themes';
 import { UploadSimple, Sun, Moon } from "phosphor-react";
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { useRouter } from 'next/navigation';
+import { ThemeContext } from './theme-provider';
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
 
 export default function Home() {
   const router = useRouter();
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
-
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { isDarkMode, toggleTheme } = useContext(ThemeContext);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+ 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
       const file = files[0];
-      setSelectedFiles([file]);
+      setSelectedFile(file);
+      setIsButtonDisabled(true);
       
       try {
         const formData = new FormData();
@@ -29,12 +35,14 @@ export default function Home() {
         
         if (data.success) {
           localStorage.setItem('formImages', JSON.stringify([data.image]));
-          console.log('Görsel başarıyla yüklendi ve kaydedildi');
+          setIsButtonDisabled(false);
         } else {
           throw new Error(data.error);
         }
       } catch (error) {
-        console.error('Görsel yükleme hatası:', error);
+        setErrorMessage('Görsel yükleme başarısız oldu. Lütfen tekrar deneyin.');
+        setShowError(true);
+        setIsButtonDisabled(true);
       }
     }
   };
@@ -43,16 +51,12 @@ export default function Home() {
     e.preventDefault();
     
     const storedImages = localStorage.getItem('formImages');
-    if (storedImages) {
+    if (storedImages && !isButtonDisabled) {
       console.log('Edit sayfasına yönlendiriliyor...');
       router.push('/edit');
     } else {
       alert('Lütfen önce görsel yükleyin');
     }
-  };
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
   };
 
   return (
@@ -61,17 +65,17 @@ export default function Home() {
         <Box
           className="rounded-full overflow-hidden"
         >
-          <Button
-            variant="soft"
+          <button
             onClick={toggleTheme}
-            className="w-12 h-12 p-0"
+            className={`p-3 rounded-full transition-colors ${
+              isDarkMode 
+                ? 'bg-slate-800 hover:bg-slate-700 text-yellow-500' 
+                : 'bg-white hover:bg-slate-100 text-slate-700 shadow-md'
+            }`}
           >
-            {isDarkMode ? (
-              <Sun size={24} weight="bold" />
-            ) : (
-              <Moon size={24} weight="bold" />
-            )}
-          </Button>
+            {isDarkMode && <Sun size={24} weight="bold" />}
+            {!isDarkMode && <Moon size={24} weight="bold" />}
+          </button>
         </Box>
 
         <Box className={`w-full max-w-3xl p-8 rounded-2xl shadow-2xl ${
@@ -121,7 +125,7 @@ export default function Home() {
                   </label>
                 </Box>
                 
-                {selectedFiles.length > 0 && (
+                {selectedFile && (
                   <Box className={`w-full p-4 rounded-xl ${
                     isDarkMode 
                       ? "bg-slate-700" 
@@ -131,12 +135,10 @@ export default function Home() {
                       <Text weight="bold" className={isDarkMode ? "text-white" : "text-blue-800"}>
                         Yüklenen Dosya:
                       </Text>
-                      {selectedFiles.map((file, index) => (
-                        <Text key={index} className={`flex items-center gap-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
-                          <UploadSimple size={16} className={isDarkMode ? "text-slate-400" : "text-blue-500"} />
-                          {file.name}
-                        </Text>
-                      ))}
+                      <Text className={`flex items-center gap-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                        <UploadSimple size={16} className={isDarkMode ? "text-slate-400" : "text-blue-500"} />
+                        {selectedFile.name}
+                      </Text>
                     </Flex>
                   </Box>
                 )}
@@ -145,15 +147,53 @@ export default function Home() {
                   onClick={handleEditClick}
                   size="3" 
                   variant="solid"
-                  className="w-full"
+                  className={`w-full ${
+                    isButtonDisabled 
+                      ? 'opacity-50 cursor-not-allowed' 
+                      : 'hover:bg-blue-600'
+                  }`}
+                  disabled={isButtonDisabled}
                 >
-                  Düzenlemeye Başla
+                  {isButtonDisabled ? 'Lütfen Görsel Yükleyiniz' : 'Düzenlemeye Başla'}
                 </Button>
               </Flex>
             </form>
           </Flex>
         </Box>
       </Flex>
+
+      <AlertDialog.Root open={showError} onOpenChange={setShowError}>
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+          <AlertDialog.Content className={`
+            fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
+            p-6 rounded-lg shadow-xl w-[90%] max-w-md
+            ${isDarkMode ? 'bg-slate-800 text-white' : 'bg-white text-slate-900'}
+            border ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}
+          `}>
+            <AlertDialog.Title className="text-lg font-semibold mb-2">
+              Hata
+            </AlertDialog.Title>
+            <AlertDialog.Description className={`
+              mb-4 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}
+            `}>
+              {errorMessage}
+            </AlertDialog.Description>
+            <div className="flex justify-end">
+              <AlertDialog.Cancel asChild>
+                <button className={`
+                  px-4 py-2 rounded-lg font-medium
+                  ${isDarkMode 
+                    ? 'bg-slate-700 hover:bg-slate-600 text-white' 
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-900'}
+                `}>
+                  Tamam
+                </button>
+              </AlertDialog.Cancel>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
     </Container>
   );
 }

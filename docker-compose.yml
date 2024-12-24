@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  node-app:
+    build:
+      context: .
+      dockerfile: Dockerfile-server
+    ports:
+      - "3000:3000"
+    environment:
+      - PYTHON_SERVICE_URL=http://python-app:5000
+      - NODE_ENV=production
+    networks:
+      - optical-form-reader-network
+    depends_on:
+      - python-app
+
+  python-app:
+    build:
+      context: .
+      dockerfile: Dockerfile-python
+    ports:
+      - "5000:5000"
+    networks:
+      - optical-form-reader-network
+    environment:
+      - FLASK_ENV=production
+
+networks:
+  optical-form-reader-network:
+    driver: bridge

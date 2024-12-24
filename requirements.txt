@@ -1,0 +1,6 @@
+numpy
+opencv-python-headless
+flask
+requests
+pillow
+flask-cors

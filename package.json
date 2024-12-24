@@ -1,0 +1,36 @@
+{
+  "name": "optical-form-reader-site",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@radix-ui/react-form": "latest",
+    "@radix-ui/react-primitive": "^2.0.1",
+    "@radix-ui/themes": "latest",
+    "autoprefixer": "^10.0.1",
+    "axios": "^1.7.9",
+    "cloudinary": "^2.5.1",
+    "next": "15.0.3",
+    "next-cloudinary": "^6.16.0",
+    "phosphor-react": "^1.4.1",
+    "postcss": "^8",
+    "react": "19.0.0-rc-66855b96-20241106",
+    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "react-zoom-pan-pinch": "^3.6.1",
+    "sharp": "^0.33.5",
+    "tailwindcss": "^3.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "15.0.3",
+    "typescript": "^5"
+  }
+}

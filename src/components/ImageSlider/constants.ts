@@ -1,0 +1,16 @@
+export const AREA_COLORS = [
+  { bg: 'bg-green-500/10', border: 'border-green-500', text: 'bg-green-500' },
+  { bg: 'bg-pink-500/10', border: 'border-pink-500', text: 'bg-pink-500' },
+  { bg: 'bg-teal-500/10', border: 'border-teal-500', text: 'bg-teal-500' },
+  { bg: 'bg-indigo-500/10', border: 'border-indigo-500', text: 'bg-indigo-500' },
+  { bg: 'bg-yellow-500/10', border: 'border-yellow-500', text: 'bg-yellow-500' },
+  { bg: 'bg-cyan-500/10', border: 'border-cyan-500', text: 'bg-cyan-500' },
+  { bg: 'bg-rose-500/10', border: 'border-rose-500', text: 'bg-rose-500' },
+  { bg: 'bg-emerald-500/10', border: 'border-emerald-500', text: 'bg-emerald-500' },
+  { bg: 'bg-violet-500/10', border: 'border-violet-500', text: 'bg-violet-500' },
+  { bg: 'bg-amber-500/10', border: 'border-amber-500', text: 'bg-amber-500' },
+  { bg: 'bg-lime-500/10', border: 'border-lime-500', text: 'bg-lime-500' },
+  { bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500', text: 'bg-fuchsia-500' },
+  { bg: 'bg-sky-500/10', border: 'border-sky-500', text: 'bg-sky-500' },
+  { bg: 'bg-slate-500/10', border: 'border-slate-500', text: 'bg-slate-500' },
+]; 

@@ -1,0 +1,24 @@
+# Dockerfile-python
+FROM python:3.10.12-slim
+
+# Çalışma dizinini ayarla
+WORKDIR /python
+
+# OpenCV bağımlılıkları
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Bağımlılıkları yükle
+COPY requirements.txt .
+RUN pip install --no-cache-dir --default-timeout=1000 -r requirements.txt
+
+
+# Python dosyalarını kopyala
+COPY python/form_processor.py .
+COPY python/app.py .
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]

@@ -2,6 +2,10 @@
 
 Bu proje, yüklenen optik formda seçilen alanlarda cevap anahtarına göre değerlendiren bir web uygulamasıdır. Next.js ve Python Flask kullanılarak geliştirilmiştir.
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/5f3ba00b-a442-4610-9d52-2c892ec09aa0" alt="gif" />
+</p>
+
 ## 🚀 Özellikler
 
 - 📝 Optik form görüntülerini yükleme ve işleme
@@ -32,9 +36,6 @@ Bu proje, yüklenen optik formda seçilen alanlarda cevap anahtarına göre değ
 
 ## 📋 Gereksinimler
 
-- Node.js 18+
-- Python 3.10+
-- Docker ve Docker Compose
 - Cloudinary hesabı
 
 ## 🔧 Kurulum
@@ -95,6 +96,11 @@ python3 app.py
 2. Düzenleme sayfasında form alanlarını seçin
 3. Her alan için cevap anahtarını belirleyin
 4. Son olarak "Değerlendir" butonuna tıklayarak sonuçları /result sayfasında görüntüleyebilirsiniz
+
+## 🖱️ Kısayollar
+- Shift: Kaydırma ve seçme modları arasında geçiş yapma
+- Ctrl + S: Seçili alanı kaydetme
+- Ctrl + Z: Son kaydedilen alanı silme
 
 ## 🌐 API Endpoints
 

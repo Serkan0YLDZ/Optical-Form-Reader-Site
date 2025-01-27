@@ -12,6 +12,9 @@ COPY . .
 # Tailwind CSS'i derle ve Next.js uygulamasını build et
 RUN npm run build
 
+# Cache busting için unique dosya oluştur
+RUN echo "CACHE_BUST=$(date +%s)" > .cache-buster
+
 EXPOSE 3000
 
 CMD ["npm", "start"]

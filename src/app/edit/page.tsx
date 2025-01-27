@@ -26,10 +26,13 @@ export default function EditPage() {
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
 
   useEffect(() => {
-    const imageUrl = localStorage.getItem('formImageUrl');
-    if (imageUrl) {
-      setImages([imageUrl]);
-    }
+    const images = JSON.parse(localStorage.getItem('formImages') || '[]');
+    
+    const uniqueImages = images.map((img: string) => 
+      `${img}?timestamp=${Date.now()}`
+    );
+    
+    setImages(uniqueImages);
 
     if (isFirstLoad) {
       const resetButton = document.querySelector('[title="Sıfırla"]');

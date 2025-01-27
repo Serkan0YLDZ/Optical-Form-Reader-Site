@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
     ],
   },
   env: {
-    PYTHON_SERVICE_URL: process.env.PYTHON_SERVICE_URL || 'python-app:5000',
+    PYTHON_SERVICE_URL: process.env.PYTHON_SERVICE_URL || 'http://python-app:5000',
   },
 };
 

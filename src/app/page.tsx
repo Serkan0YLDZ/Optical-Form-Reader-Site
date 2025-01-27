@@ -18,35 +18,26 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
  
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      setIsLoading(true);
-      const file = files[0];
-      setSelectedFile(file);
-      setIsButtonDisabled(true);
+    if (event.target.files?.[0]) {
+      const file = event.target.files[0];
       const formData = new FormData();
       formData.append('file', file);
-      
+
       try {
         const response = await fetch('/api/upload', {
           method: 'POST',
-          body: formData,
+          body: formData
         });
         
-        const data = await response.json();
-        
-        if (data.success) {
-          localStorage.setItem('formImageId', data.imageId);
-          localStorage.setItem('formImageUrl', data.imageUrl);
+        const result = await response.json();
+        if (result.imageUrl) {
+          localStorage.removeItem('formImages');
+          localStorage.setItem('formImages', JSON.stringify([result.imageUrl]));
+          setSelectedFile(file);
           setIsButtonDisabled(false);
-        } else {
-          throw new Error(data.error);
         }
       } catch (error) {
         console.error('Yükleme hatası:', error);
-        setShowError(true);
-      } finally {
-        setIsLoading(false);
       }
     }
   };
@@ -56,9 +47,11 @@ export default function Home() {
     setIsLoading(true);
     
     const storedImages = localStorage.getItem('formImages');
-    if (storedImages) {
+    if (storedImages && JSON.parse(storedImages).length > 0) {
       router.push('/edit');
-    } 
+    } else {
+      setShowError(true);
+    }
   };
 
   return (

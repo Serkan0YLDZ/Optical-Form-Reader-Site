@@ -1,25 +1,26 @@
-# Optik Form Okuyucu 
+# Optical Form Reader
 
-Bu proje, yüklenen optik formda seçilen alanlarda cevap anahtarına göre değerlendiren bir web uygulamasıdır. Next.js ve Python Flask kullanılarak geliştirilmiştir.
+This project is a web application that evaluates the selected fields in the uploaded optical form according to the answer key. It was developed using Next.js and Python Flask.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/5f3ba00b-a442-4610-9d52-2c892ec09aa0" alt="gif" />
+
+<img src="https://github.com/user-attachments/assets/5f3ba00b-a442-4610-9d52-2c892ec09aa0" alt="gif" />
 </p>
 
-## 🚀 Özellikler
+## 🚀 Features
 
-- 📝 Optik form görüntülerini yükleme ve işleme
-- 🖼️ Görüntü yakınlaştırma ve kaydırma özellikleri
-- ☁️ Cloudinary entegrasyonu ile görüntü depolama
-- ✂️ Form alanlarını interaktif olarak seçme ve kırpma
-- 🎯 Soruların cevap anahtarına göre otomatik değerlendirme
-- 📊 Sonuçları detaylı raporlama
-- 🌓 Koyu/Açık tema desteği
+- 📝 Loading and processing optical form images
+- 🖼️ Image zoom and pan features
+- ☁️ Image storage with Cloudinary integration
+- ✂️ Interactive selection and cropping of form fields
+- 🎯 Automatic evaluation of questions according to answer key
+- 📊 Detailed reporting of results
+- 🌓 Dark/Light theme support
 
-## 🛠️ Teknolojiler
+## 🛠️ Technologies
 
 ### Frontend
-- Next.js 
+- Next.js
 - TypeScript
 - Radix UI
 - React Zoom Pan Pinch
@@ -30,86 +31,85 @@ Bu proje, yüklenen optik formda seçilen alanlarda cevap anahtarına göre değ
 - OpenCV
 - NumPy
 
-### Altyapı
+### Framework
 - Docker
-- Docker Compose
 
-## 📋 Gereksinimler
+## 📋 Requirements
 
-- Cloudinary hesabı
+- Cloudinary account
 
-## 🔧 Kurulum
+## 🔧 Installation
 
-1. Repoyu klonlayın:
+1. Clone the repo:
 ```bash
 git clone https://github.com/Serkan0YLDZ/Optical-Form-Reader-Site.git/
 cd optical-form-reader
 ```
 
-2.1 Çevre değişkenlerini ayarlayın (Docker için):
+2.1 Set environment variables (for Docker):
 ```bash
-# .env.local dosyası oluşturun 
+# Create .env.local file
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 PYTHON_SERVICE_URL=http://python-app:5000
 ```
 
-2.2 Çevre değişkenlerini ayarlayın (Developer mod için):
+2.2 Set environment variables (for Developer mode):
 ```bash
-# .env.local dosyası oluşturun 
+# Create .env.local file
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 PYTHON_SERVICE_URL=http://localhost:5000
 ```
 
-3. Gerekli paketleri yükleyin:
+3. Install required packages:
 ```bash
 npm install --legacy-peer-deps
 npm install @radix-ui/react-primitive -f
 npm install cloudinary -f
 ```
 
-4.1 Docker ile çalıştırın:
+4.1 Run with Docker:
 ```bash
 docker-compose up --build
 ```
 
-4.2 Veya manuel olarak çalıştırın:
+4.2 Or run manually:
 
-Frontend için:
+For Frontend:
 ```bash
 npm run dev
 ```
 
-Backend için:
+For Backend:
 ```bash
 pip install -r requirements.txt
 cd python
 python3 app.py
 ```
 
-## 💻 Kullanım
+## 💻 Usage
 
-1. Ana sayfada "Dosya Seç" butonuna tıklayarak form görselini yükleyin
-2. Düzenleme sayfasında form alanlarını seçin
-3. Her alan için cevap anahtarını belirleyin
-4. Son olarak "Değerlendir" butonuna tıklayarak sonuçları /result sayfasında görüntüleyebilirsiniz
+1. On the main page, click the "Select File" button to upload the form image
+2. On the edit page, select the form fields
+3. Specify the answer key for each field
+4. Finally, you can view the results on the /result page by clicking the "Evaluate" button
 
-## 🖱️ Kısayollar
-- Shift: Kaydırma ve seçme modları arasında geçiş yapma
-- Ctrl + S: Seçili alanı kaydetme
-- Ctrl + Z: Son kaydedilen alanı silme
+## 🖱️ Shortcuts
+- Shift: Switch between scrolling and selecting modes
+- Ctrl + S: Save the selected area
+- Ctrl + Z: Last saved area delete
 
 ## 🌐 API Endpoints
 
 ### Frontend API Routes
 
-- `POST /api/upload`: Görüntü yükleme
-- `POST /api/crop`: Seçili alanı kırpma
-- `POST /api/analyze`: Form değerlendirme
+- `POST /api/upload`: Upload image
+- `POST /api/crop`: Crop selected area
+- `POST /api/analyze`: Evaluate form
 
 ### Python API Endpoints
 
-- `POST /analyze`: Form görüntüsü analizi
+- `POST /analyze`: Analyze form image
